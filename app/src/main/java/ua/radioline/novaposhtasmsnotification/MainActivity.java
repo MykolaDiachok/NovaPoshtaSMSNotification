@@ -1,5 +1,6 @@
 package ua.radioline.novaposhtasmsnotification;
 
+import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Context;
 import android.os.Bundle;
@@ -30,6 +31,7 @@ public class MainActivity extends AppCompatActivity
     public static Context getContextOfApplication() {
         return contextOfApplication;
     }
+    private Fragment cur_fragment = new GalleryFragment();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,7 +67,8 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
         FragmentManager fm = getFragmentManager();
-        fm.beginTransaction().replace(R.id.content_frame, new GalleryFragment()).commit();
+
+        fm.beginTransaction().replace(R.id.content_frame, cur_fragment).commit();
 
     }
 
@@ -108,15 +111,18 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
         FragmentManager fm = getFragmentManager();
         if (id == R.id.nav_gallery) {
-            fm.beginTransaction().replace(R.id.content_frame,new GalleryFragment()).commit();
-        } else if (id == R.id.nav_manage) {
-            fm.beginTransaction().replace(R.id.content_frame,new ToolsFragment()).commit();
-        } else if (id == R.id.nav_share) {
-            fm.beginTransaction().replace(R.id.content_frame,new ShareFragment()).commit();
-        } else if (id == R.id.nav_send) {
-            fm.beginTransaction().replace(R.id.content_frame,new SendFragment()).commit();
-        }
+            cur_fragment = new GalleryFragment();
 
+        } else if (id == R.id.nav_manage) {
+            cur_fragment = new ToolsFragment();
+
+        } else if (id == R.id.nav_share) {
+            cur_fragment = new ShareFragment();
+
+        } else if (id == R.id.nav_send) {
+            cur_fragment = new SendFragment();
+        }
+        fm.beginTransaction().replace(R.id.content_frame,cur_fragment).commit();
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;

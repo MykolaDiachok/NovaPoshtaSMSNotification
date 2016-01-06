@@ -4,6 +4,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -11,6 +12,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import ua.radioline.novaposhtasmsnotification.MainActivity;
 import ua.radioline.novaposhtasmsnotification.basic.BaseValues;
 import ua.radioline.novaposhtasmsnotification.basic.InternetDocument;
 import ua.radioline.novaposhtasmsnotification.util.HttpUtil;
@@ -94,7 +96,11 @@ public class InternetDocumentAsyncTask extends AsyncTask<String, Void, Response>
             ArrayList<InternetDocument> internetDocuments = InternetDocument.fromJson(jsonObject.getJSONArray("data"));
             listener.onTaskCompleted(internetDocuments);
         } catch (JSONException jsonex) {
+            Toast.makeText(MainActivity.getContextOfApplication(),"JSON Errors",Toast.LENGTH_LONG);
             Log.e("JSONException", jsonex.getMessage());
+        }catch (NullPointerException ex){
+            Toast.makeText(MainActivity.getContextOfApplication(),"No data!",Toast.LENGTH_LONG);
+            Log.e("NullPointerException", ex.getMessage());
         }
 
 

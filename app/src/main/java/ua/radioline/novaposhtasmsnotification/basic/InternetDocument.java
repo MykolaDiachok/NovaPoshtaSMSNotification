@@ -5,6 +5,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.regex.Pattern;
+
+import ua.radioline.novaposhtasmsnotification.DB.DBHelper;
 
 /**
  * Created by mikoladyachok on 12/30/15.
@@ -45,22 +48,35 @@ public class InternetDocument {
         SendSMS = false;
     }
 
+    public String getSendSMS(InternetDocument idoc) {
+//        String smsinfo = "RL otpravleno Nova Poshta %IntDocNumber% " +
+//                "<SeatsAmount>mest %SeatsAmount% </SeatsAmount>" +
+//                "<EstimatedDeliveryDate>data %EstimatedDeliveryDate%</EstimatedDeliveryDate>" +
+//                "<Pay>k oplate:" +
+//                " <CostOnSite>%CostOnSite% za dostavku </CostOnSite>" +
+//                " <Cost>%Cost% za zakaz<Cost></Pay>";
+        String sTemplate = BaseValues.GetValue("Template");
+        sTemplate.replace("%IntDocNumber%", idoc.IntDocNumber);
+        Pattern pattern = Pattern.compile(".*(<SeatsAmount>.*%SeatsAmount%.*<\\/SeatsAmount>).*");
 
+        return "";
+    }
 
 
     // Constructor to convert JSON object into a Java class instance
-    public InternetDocument(JSONObject object){
+    public InternetDocument(JSONObject object) {
         try {
 
-
+            DBHelper dbHelper = new DBHelper();
 
             this.IntDocNumber = object.getString("IntDocNumber");
+
             this.PayerType = object.getString("PayerType");
-            this.RecipientContactPhone = "+"+object.getString("RecipientContactPhone").toString();
+            this.RecipientContactPhone = "+" + object.getString("RecipientContactPhone").toString();
             this.RecipientContactPerson = object.getString("RecipientContactPerson");
             this.EstimatedDeliveryDate = object.getString("EstimatedDeliveryDate");
             this.RecipientAddressDescription =
-                     object.getString("RecipientAddressDescription");
+                    object.getString("RecipientAddressDescription");
 
             this.CityRecipientDescription = object.getString("CityRecipientDescription");
             this.SeatsAmount = object.getString("SeatsAmount");
@@ -70,7 +86,7 @@ public class InternetDocument {
             this.StateName = object.getString("StateName");
             this.DateTime = object.getString("DateTime");
             this.RecipientDescription = object.getString("RecipientDescription");
-            this.SendSMS = false;
+            this.SendSMS = dbHelper.getByNPID(this.IntDocNumber);
 
         } catch (JSONException e) {
             e.printStackTrace();

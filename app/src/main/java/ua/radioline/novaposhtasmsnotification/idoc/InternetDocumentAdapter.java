@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -29,6 +30,7 @@ public class InternetDocumentAdapter extends ArrayAdapter<InternetDocument> {
         TextView RecipientContactPerson;
         TextView EstimatedDeliveryDate;
         TextView RecipientAddressDescription;
+        CheckBox CheckBoxSend;
     }
 
 
@@ -52,6 +54,7 @@ public class InternetDocumentAdapter extends ArrayAdapter<InternetDocument> {
             viewHolder.RecipientContactPerson = (TextView) convertView.findViewById(R.id.tvRecipientContactPerson);
             viewHolder.EstimatedDeliveryDate = (TextView) convertView.findViewById(R.id.tvEstimatedDeliveryDate);
             viewHolder.RecipientAddressDescription = (TextView) convertView.findViewById(R.id.tvRecipientAddressDescription);
+            viewHolder.CheckBoxSend = (CheckBox) convertView.findViewById(R.id.checkBoxSend);
             convertView.setTag(viewHolder);
         } else {
             viewHolder = (ViewHolder) convertView.getTag();
@@ -63,6 +66,7 @@ public class InternetDocumentAdapter extends ArrayAdapter<InternetDocument> {
         viewHolder.RecipientContactPerson.setText(internetDocument.RecipientContactPerson);
         viewHolder.EstimatedDeliveryDate.setText(internetDocument.EstimatedDeliveryDate.substring(0,10).trim());
         viewHolder.RecipientAddressDescription.setText(internetDocument.CityRecipientDescription+" "+ internetDocument.RecipientAddressDescription);
+        viewHolder.CheckBoxSend.setChecked(internetDocument.SendSMS);
         // Return the completed view to render on screen
         return convertView;
     }
