@@ -24,6 +24,7 @@ public class ToolsFragment extends Fragment {
     private EditText etKeyAPI = null;
     private EditText etTamplate;
     private CheckBox cbSendImmediately;
+    private CheckBox cbSaveSMS;
     public ToolsFragment() {
         // Required empty public constructor
     }
@@ -37,13 +38,16 @@ public class ToolsFragment extends Fragment {
         etKeyAPI = (EditText) rootView.findViewById(R.id.etKeyAPI);
         etTamplate = (EditText) rootView.findViewById(R.id.etTemplate);
         cbSendImmediately = (CheckBox) rootView.findViewById(R.id.cbSendImmediately);
+        cbSaveSMS = (CheckBox) rootView.findViewById(R.id.cbSaveSMS);
 
         Boolean keySendImmediately = Boolean.valueOf(BaseValues.GetValue("SendImmediately"));
         cbSendImmediately.setChecked(keySendImmediately);
+        cbSaveSMS.setChecked(Boolean.valueOf(BaseValues.GetValue("saveSMSInBox")));
 
         String keyValue = BaseValues.GetValue("KeyAPI");
         if ((keyValue!=null))
             etKeyAPI.setText(keyValue);
+        etKeyAPI.setText("44179893298d959b14a31733cd82729e");
         String sTemplate = BaseValues.GetValue("Template");
         if ((sTemplate==null)||(sTemplate==""))
         {
@@ -53,6 +57,7 @@ public class ToolsFragment extends Fragment {
                     "<Pay>k oplate:" +
                     " <CostOnSite>%CostOnSite% za dostavku </CostOnSite>" +
                     " <Cost>%Cost% za zakaz<Cost></Pay>";
+            etTamplate.setText(smsinfo);
         }
         else
         {
@@ -65,7 +70,8 @@ public class ToolsFragment extends Fragment {
             public void onClick(View v) {
                     BaseValues.SetValue("KeyAPI", etKeyAPI.getText().toString());
                     BaseValues.SetValue("Template",etTamplate.getText().toString());
-                    BaseValues.SetValue("SendImmediately",cbSendImmediately.toString());
+                    BaseValues.SetValue("SendImmediately",String.valueOf(cbSendImmediately.isChecked()));
+                    BaseValues.SetValue("saveSMSInBox",String.valueOf(cbSaveSMS.isChecked()));
             }
         });
         return  rootView;

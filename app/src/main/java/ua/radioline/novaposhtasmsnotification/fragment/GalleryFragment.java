@@ -2,7 +2,9 @@ package ua.radioline.novaposhtasmsnotification.fragment;
 
 import android.app.AlertDialog;
 import android.app.Fragment;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 
 import android.telephony.SmsManager;
@@ -47,7 +49,7 @@ public class GalleryFragment extends Fragment implements InternetDocumentOnTaskC
     private ListView lvArrayEN = null;
     private Date tDate;
     private InternetDocumentAdapter adapter;
-    private boolean bSendImmediately;
+    private boolean bSendImmediately,bsaveSMSInBox;
 
     public GalleryFragment() {
         // Required empty public constructor
@@ -62,6 +64,7 @@ public class GalleryFragment extends Fragment implements InternetDocumentOnTaskC
         View rootView = inflater.inflate(R.layout.fragment_gallery, container, false);
 
         bSendImmediately = Boolean.valueOf(BaseValues.GetValue("SendImmediately"));
+        bsaveSMSInBox = Boolean.valueOf(BaseValues.GetValue("saveSMSInBox"));
 
         etDate = (EditText) rootView.findViewById(R.id.etDate);
         lvArrayEN = (ListView) rootView.findViewById(R.id.lvArrayEN);
@@ -91,22 +94,29 @@ public class GalleryFragment extends Fragment implements InternetDocumentOnTaskC
 //                List<SimInfo> tempSimInfo = SimUtil.getSIMInfo(MainActivity.getContextOfApplication());
 //                for (SimInfo simin:tempSimInfo
 //                     ) {
-                    //SmsManager smsManager = SmsManager.getDefault();
-                    //smsManager.sendTextMessage("+380676112798", null, smsinfo, null, null);
-//                    SimUtil.sendSMS(MainActivity.contextOfApplication, 1, "+380676112798", null, "SMS1", null, null);
-//                }
-//                if (bSendImmediately) {
 //                    SmsManager smsManager = SmsManager.getDefault();
 //                    smsManager.sendTextMessage("+380676112798", null, smsinfo, null, null);
-//                    //smsManager.sendTextMessage(idoc.RecipientContactPhone, null, smsinfo, null, null);
-//                } else {
+//                    SimUtil.sendSMS(MainActivity.contextOfApplication, 1, "+380676112798", null, "SMS1", null, null);
+//                }
+                if (bSendImmediately) {
+                    SmsManager smsManager = SmsManager.getDefault();
+                    smsManager.sendTextMessage(idoc.RecipientContactPhone, null, smsinfo, null, null);
+                    if (bsaveSMSInBox) {
+                        ContentValues values = new ContentValues();
+                        values.put("address", idoc.RecipientContactPhone);//sender name
+                        values.put("body", smsinfo);
+                        MainActivity.contextOfApplication.getContentResolver().insert(Uri.parse("content://sms/sent"), values);
+                    }
+                    //smsManager.sendTextMessage(idoc.RecipientContactPhone, null, smsinfo, null, null);
+                    //SimUtil.sendSMS(MainActivity.contextOfApplication, 0, "+380676112798", null, "SMS1", null, null);
+
+                } else {
                     Intent smsIntent = new Intent(Intent.ACTION_VIEW);
                     smsIntent.setType("vnd.android-dir/mms-sms");
-                    smsIntent.putExtra("simSlot", 1); //For sim 1
-                    smsIntent.putExtra("address", "+380676112798");
+                    smsIntent.putExtra("address", idoc.RecipientContactPhone);
                     smsIntent.putExtra("sms_body", smsinfo);
                     startActivity(smsIntent);
-//                }
+                }
 
 
                 idoc.SendSMS = true;

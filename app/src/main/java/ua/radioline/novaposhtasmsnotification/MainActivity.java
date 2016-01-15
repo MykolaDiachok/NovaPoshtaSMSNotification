@@ -18,6 +18,8 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.parse.ParseAnalytics;
+
 import ua.radioline.novaposhtasmsnotification.fragment.GalleryFragment;
 import ua.radioline.novaposhtasmsnotification.fragment.MainFragment;
 import ua.radioline.novaposhtasmsnotification.fragment.SendFragment;
@@ -36,6 +38,8 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        ParseAnalytics.trackAppOpenedInBackground(getIntent());
         contextOfApplication = getApplicationContext();
 
         setContentView(R.layout.activity_main);

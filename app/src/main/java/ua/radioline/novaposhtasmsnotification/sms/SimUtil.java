@@ -6,6 +6,8 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
+import android.telephony.SmsManager;
+import android.telephony.SubscriptionManager;
 import android.util.Log;
 
 import java.lang.reflect.Array;
@@ -26,12 +28,15 @@ public class SimUtil {
         try {
             if (simID == 0) {
                 name = "isms";
-                // for model : "Philips T939" name = "isms0"
             } else if (simID == 1) {
                 name = "isms2";
             } else {
                 throw new Exception("can not get service which for sim '" + simID + "', only 0,1 accepted as values");
             }
+
+
+
+            //sManager.getSmsManagerForSubscriber(SubscriptionManager.getSubId(1))
             Method method = Class.forName("android.os.ServiceManager").getDeclaredMethod("getService", String.class);
             method.setAccessible(true);
             Object param = method.invoke(null, name);

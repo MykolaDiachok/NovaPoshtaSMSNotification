@@ -1,4 +1,7 @@
 <resources>
+    <string name="parse_app_id">f0NzjEleH79YbPNEFs7cWngXuyBR9wLgH2gZwmyL</string>
+    <string name="parse_client_key">U7iYRac9MJv2AjGIN931QvjvPYFGVNiemaPNzK3P</string>
+
     <string name="app_name">Nova Poshta SMS Notification</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>

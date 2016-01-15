@@ -5,6 +5,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import ua.radioline.novaposhtasmsnotification.DB.DBHelper;
@@ -48,7 +49,7 @@ public class InternetDocument {
         SendSMS = false;
     }
 
-    public String getSendSMS(InternetDocument idoc) {
+    public String getStringForSendSMS(InternetDocument idoc) {
 //        String smsinfo = "RL otpravleno Nova Poshta %IntDocNumber% " +
 //                "<SeatsAmount>mest %SeatsAmount% </SeatsAmount>" +
 //                "<EstimatedDeliveryDate>data %EstimatedDeliveryDate%</EstimatedDeliveryDate>" +
@@ -57,8 +58,13 @@ public class InternetDocument {
 //                " <Cost>%Cost% za zakaz<Cost></Pay>";
         String sTemplate = BaseValues.GetValue("Template");
         sTemplate.replace("%IntDocNumber%", idoc.IntDocNumber);
-        Pattern pattern = Pattern.compile(".*(<SeatsAmount>.*%SeatsAmount%.*<\\/SeatsAmount>).*");
 
+        Pattern pattern = Pattern.compile(".*(<SeatsAmount>(.*)%SeatsAmount%(.*)<\\/SeatsAmount>).*");
+        Matcher m = pattern.matcher(sTemplate);
+        if (m.find())
+        {
+
+        }
         return "";
     }
 
