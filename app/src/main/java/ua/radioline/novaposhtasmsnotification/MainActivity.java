@@ -20,20 +20,31 @@ import android.view.MenuItem;
 
 import com.parse.ParseAnalytics;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+
+import ua.radioline.novaposhtasmsnotification.basic.BaseValues;
+import ua.radioline.novaposhtasmsnotification.basic.InternetDocument;
 import ua.radioline.novaposhtasmsnotification.fragment.GalleryFragment;
 import ua.radioline.novaposhtasmsnotification.fragment.MainFragment;
 import ua.radioline.novaposhtasmsnotification.fragment.SendFragment;
 import ua.radioline.novaposhtasmsnotification.fragment.ShareFragment;
 import ua.radioline.novaposhtasmsnotification.fragment.ToolsFragment;
+import ua.radioline.novaposhtasmsnotification.idoc.InternetDocumentAsyncTask;
+import ua.radioline.novaposhtasmsnotification.idoc.InternetDocumentOnTaskCompleted;
+import ua.radioline.novaposhtasmsnotification.sms.BasicSendSMS;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener,InternetDocumentOnTaskCompleted {
 
     public static Context contextOfApplication;
     public static Context getContextOfApplication() {
         return contextOfApplication;
     }
     private Fragment cur_fragment = new GalleryFragment();
+    private String keyValue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,8 +67,12 @@ public class MainActivity extends AppCompatActivity
             public void onClick(View view) {
                 //Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                 //      .setAction("Action", null).show();
-                SmsManager smsManager = SmsManager.getDefault();
-                smsManager.sendTextMessage("+380676112798", null, "sms message", null, null);
+
+                SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
+                String currentDate = sdf.format(new Date());
+                new InternetDocumentAsyncTask(MainActivity.this,MainActivity.this).execute(currentDate);
+//                SmsManager smsManager = SmsManager.getDefault();
+//                smsManager.sendTextMessage("+380676112798", null, "sms message", null, null);
             }
         });
 
@@ -70,8 +85,13 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        FragmentManager fm = getFragmentManager();
 
+
+        keyValue = BaseValues.GetValue("KeyAPI");
+        if (keyValue.isEmpty())
+            cur_fragment = new ToolsFragment();
+
+        FragmentManager fm = getFragmentManager();
         fm.beginTransaction().replace(R.id.content_frame, cur_fragment).commit();
 
     }
@@ -130,5 +150,16 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    @Override
+    public void onTaskCompleted(ArrayList<InternetDocument> internetDocuments) {
+        BasicSendSMS basicSend = new BasicSendSMS(MainActivity.this);
+        for (InternetDocument idoc:internetDocuments
+             ) {
+            if (!idoc.SendSMS){
+                basicSend.SendSMS(idoc);
+            }
+        }
     }
 }

@@ -3,6 +3,7 @@ package ua.radioline.novaposhtasmsnotification.fragment;
 import android.app.AlertDialog;
 import android.app.Fragment;
 import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -36,20 +37,19 @@ import ua.radioline.novaposhtasmsnotification.idoc.InternetDocumentAsyncTask;
 import ua.radioline.novaposhtasmsnotification.idoc.InternetDocumentOnTaskCompleted;
 import ua.radioline.novaposhtasmsnotification.basic.EditTextDatePicker;
 import ua.radioline.novaposhtasmsnotification.basic.InternetDocument;
-import ua.radioline.novaposhtasmsnotification.sms.SimInfo;
-import ua.radioline.novaposhtasmsnotification.sms.SimUtil;
+import ua.radioline.novaposhtasmsnotification.sms.BasicSendSMS;
 
 
-/**
- * A simple {@link Fragment} subclass.
- */
 public class GalleryFragment extends Fragment implements InternetDocumentOnTaskCompleted, EditTextDatePickerOnCompleted {
+
+    private boolean itsTest=false;
 
     private EditText etDate = null;
     private ListView lvArrayEN = null;
     private Date tDate;
     private InternetDocumentAdapter adapter;
-    private boolean bSendImmediately,bsaveSMSInBox;
+    private boolean bSendImmediately, bsaveSMSInBox;
+    private InternetDocument internetDocument;
 
     public GalleryFragment() {
         // Required empty public constructor
@@ -72,66 +72,87 @@ public class GalleryFragment extends Fragment implements InternetDocumentOnTaskC
         lvArrayEN.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                InternetDocument idoc = adapter.getInternetDocument(position);
-//                if (idoc.SendSMS){
-//                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder();
-//                }
-//                else {
-
-
-                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                String sdate = idoc.EstimatedDeliveryDate.substring(0, 10);
-                try {
-                    Date date = format.parse(idoc.EstimatedDeliveryDate);
-                    format = new SimpleDateFormat("dd.MM.yyyy");
-                    sdate = format.format(date);
-
-                } catch (ParseException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-                String smsinfo = "RL otpravleno Nova Poshta " + idoc.IntDocNumber + " mest " + idoc.SeatsAmount + " data " + sdate;
-//                List<SimInfo> tempSimInfo = SimUtil.getSIMInfo(MainActivity.getContextOfApplication());
-//                for (SimInfo simin:tempSimInfo
-//                     ) {
-//                    SmsManager smsManager = SmsManager.getDefault();
-//                    smsManager.sendTextMessage("+380676112798", null, smsinfo, null, null);
-//                    SimUtil.sendSMS(MainActivity.contextOfApplication, 1, "+380676112798", null, "SMS1", null, null);
-//                }
-                if (bSendImmediately) {
-                    SmsManager smsManager = SmsManager.getDefault();
-                    smsManager.sendTextMessage(idoc.RecipientContactPhone, null, smsinfo, null, null);
-                    if (bsaveSMSInBox) {
-                        ContentValues values = new ContentValues();
-                        values.put("address", idoc.RecipientContactPhone);//sender name
-                        values.put("body", smsinfo);
-                        MainActivity.contextOfApplication.getContentResolver().insert(Uri.parse("content://sms/sent"), values);
-                    }
-                    //smsManager.sendTextMessage(idoc.RecipientContactPhone, null, smsinfo, null, null);
-                    //SimUtil.sendSMS(MainActivity.contextOfApplication, 0, "+380676112798", null, "SMS1", null, null);
+                internetDocument = adapter.getInternetDocument(position);
+                if (internetDocument.SendSMS) {
+                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getActivity());
+                    alertDialogBuilder.setTitle("Attention")
+                            .setMessage("This SMS has been sent")
+                            .setIcon(R.mipmap.ic_stat_smssend)
+                            .setCancelable(true)
+                            .setPositiveButton("Yes, send again", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    SendSMS(internetDocument);
+                                    dialog.cancel();
+                                }
+                            })
+                            .setNegativeButton("No, send again",
+                                    new DialogInterface.OnClickListener() {
+                                        public void onClick(DialogInterface dialog, int id) {
+                                            dialog.cancel();
+                                        }
+                                    });
+                    AlertDialog alert = alertDialogBuilder.create();
+                    alert.show();
 
                 } else {
-                    Intent smsIntent = new Intent(Intent.ACTION_VIEW);
-                    smsIntent.setType("vnd.android-dir/mms-sms");
-                    smsIntent.putExtra("address", idoc.RecipientContactPhone);
-                    smsIntent.putExtra("sms_body", smsinfo);
-                    startActivity(smsIntent);
+                    SendSMS(internetDocument);
                 }
-
-
-                idoc.SendSMS = true;
-                DBHelper dbHelper = new DBHelper();
-                dbHelper.insert(idoc.IntDocNumber, idoc.RecipientContactPhone, idoc.IntDocNumber, "SMS info", true);
-                Toast.makeText(getActivity(), idoc.RecipientContactPhone, Toast.LENGTH_LONG).show();
-                adapter.notifyDataSetChanged();
-                //}
             }
         });
 
         EditTextDatePicker datepicker = new EditTextDatePicker(container.getContext(), etDate, tDate, this);
         datepicker.setCurrentDate();
-//        new InternetDocumentAsyncTask(getActivity(),this).execute();
         return rootView;
+    }
+
+
+    private void SendSMS(InternetDocument idoc)
+    {
+//        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+//        String sdate = idoc.EstimatedDeliveryDate.substring(0, 10);
+//        try {
+//            Date date = format.parse(idoc.EstimatedDeliveryDate);
+//            format = new SimpleDateFormat("dd.MM.yyyy");
+//            sdate = format.format(date);
+//        } catch (ParseException e) {
+//            e.printStackTrace();
+//        }
+//        String smsinfo = "RL otpravleno Nova Poshta " + idoc.IntDocNumber + " mest " + idoc.SeatsAmount + " data " + sdate;
+//
+//        if (bSendImmediately) {
+//            SmsManager smsManager = SmsManager.getDefault();
+//            if (itsTest) {
+//                smsManager.sendTextMessage("+380676112798", null, smsinfo, null, null);
+//            }
+//            else
+//            {
+//                smsManager.sendTextMessage(idoc.RecipientContactPhone, null, smsinfo, null, null);
+//            }
+//            if (bsaveSMSInBox) {
+//                ContentValues values = new ContentValues();
+//                values.put("address", idoc.RecipientContactPhone);//sender name
+//                values.put("body", smsinfo);
+//                MainActivity.contextOfApplication.getContentResolver().insert(Uri.parse("content://sms/sent"), values);
+//            }
+//
+//
+//        } else {
+//            Intent smsIntent = new Intent(Intent.ACTION_VIEW);
+//            smsIntent.setType("vnd.android-dir/mms-sms");
+//            smsIntent.putExtra("address", idoc.RecipientContactPhone);
+//            smsIntent.putExtra("sms_body", smsinfo);
+//            startActivity(smsIntent);
+//        }
+//
+//
+//        idoc.SendSMS = true;
+//        DBHelper dbHelper = new DBHelper();
+//        dbHelper.insert(idoc.IntDocNumber, idoc.RecipientContactPhone, idoc.IntDocNumber, "SMS info", true);
+//        Toast.makeText(getActivity(), idoc.RecipientContactPhone, Toast.LENGTH_LONG).show();
+        BasicSendSMS basicSendSMS = new BasicSendSMS(MainActivity.contextOfApplication);
+        basicSendSMS.SendSMS(idoc);
+        adapter.notifyDataSetChanged();
     }
 
 

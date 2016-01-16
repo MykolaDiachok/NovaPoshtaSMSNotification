@@ -4,6 +4,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import org.json.JSONException;
@@ -34,6 +35,10 @@ public class InternetDocumentAsyncTask extends AsyncTask<String, Void, Response>
     public InternetDocumentAsyncTask(Context mContext, InternetDocumentOnTaskCompleted listener) {
         this.mContext = mContext;
         this.listener=listener;
+    }
+
+    public InternetDocumentAsyncTask(InternetDocumentOnTaskCompleted listener) {
+        this.listener = listener;
     }
 
 
