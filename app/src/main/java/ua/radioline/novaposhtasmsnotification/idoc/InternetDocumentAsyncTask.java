@@ -23,21 +23,21 @@ import ua.radioline.novaposhtasmsnotification.util.Response;
  * Created by mikoladyachok on 12/30/15.
  */
 public class InternetDocumentAsyncTask extends AsyncTask<String, Void, Response> {
-    private InternetDocumentOnTaskCompleted listener;
+    private InternetDocumentOnTaskListener listener;
     private final static String SERVICE_URL = "https://api.novaposhta.ua/v2.0/json/";
+    private boolean forsend;
 
 
-    private ProgressDialog mProgressDialog;
     private Context mContext;
 
 
 
-    public InternetDocumentAsyncTask(Context mContext, InternetDocumentOnTaskCompleted listener) {
+    public InternetDocumentAsyncTask(Context mContext, InternetDocumentOnTaskListener listener) {
         this.mContext = mContext;
         this.listener=listener;
     }
 
-    public InternetDocumentAsyncTask(InternetDocumentOnTaskCompleted listener) {
+    public InternetDocumentAsyncTask(InternetDocumentOnTaskListener listener) {
         this.listener = listener;
     }
 
@@ -45,15 +45,8 @@ public class InternetDocumentAsyncTask extends AsyncTask<String, Void, Response>
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
+        listener.onTaskStarted();
 
-
-        mProgressDialog = new ProgressDialog(mContext);
-        mProgressDialog.setMessage("Waiting...");
-        mProgressDialog.setIndeterminate(false);
-        mProgressDialog.setCancelable(false);
-
-
-        mProgressDialog.show();
     }
 
 
@@ -68,7 +61,16 @@ public class InternetDocumentAsyncTask extends AsyncTask<String, Void, Response>
             jsonObject.put("modelName", "InternetDocument");
             jsonObject.put("calledMethod", "getDocumentList");
             jsonObject.put("methodProperties", new JSONObject().put("DateTime",params[0]));
-
+            if ((params.length>1)&&params[1].isEmpty())
+            {
+                forsend=false;
+            }
+            else if ((params.length>1))
+            {
+                forsend = true;
+            }
+            else
+             forsend = false;
 //            jsonObject.put("nome", mUser.getUsername());
 //            jsonObject.put("senha", mUser.getPassword());
 
@@ -89,8 +91,8 @@ public class InternetDocumentAsyncTask extends AsyncTask<String, Void, Response>
     protected void onPostExecute(Response response) {
         super.onPostExecute(response);
 
-
-        mProgressDialog.dismiss();
+//        if ((mProgressDialog!=null)&&(mProgressDialog.isShowing()))
+//            mProgressDialog.dismiss();
 
 
         JSONObject jsonObject = null;
@@ -99,28 +101,20 @@ public class InternetDocumentAsyncTask extends AsyncTask<String, Void, Response>
         try {
             jsonObject = new JSONObject(response.getContentValue());
             ArrayList<InternetDocument> internetDocuments = InternetDocument.fromJson(jsonObject.getJSONArray("data"));
-            listener.onTaskCompleted(internetDocuments);
+            if (internetDocuments!=null)
+                listener.onTaskCompleted(internetDocuments,forsend);
         } catch (JSONException jsonex) {
-            Toast.makeText(MainActivity.getContextOfApplication(),"JSON Errors",Toast.LENGTH_LONG);
+            Toast.makeText(MainActivity.getContextOfApplication(), "JSON Errors:" + jsonex.getMessage(),Toast.LENGTH_LONG);
             Log.e("JSONException", jsonex.getMessage());
+
         }catch (NullPointerException ex){
-            Toast.makeText(MainActivity.getContextOfApplication(),"No data!",Toast.LENGTH_LONG);
+            Toast.makeText(MainActivity.getContextOfApplication(), "No data!:" + ex.getMessage(), Toast.LENGTH_LONG);
             Log.e("NullPointerException", ex.getMessage());
         }
 
 
-//        if(response.getStatusCodeHttp() == HttpURLConnection.HTTP_OK){
-//            try {
-//                Toast.makeText(mContext, jsonObject.getString("key"), Toast.LENGTH_SHORT).show();
-//            } catch (JSONException jsonex) {
-//                Log.e("JSONException", jsonex.getMessage());
-//            }
-//        }else{
-//            try {
-//                Toast.makeText(mContext, jsonObject.getString("mensagem"), Toast.LENGTH_SHORT).show();
-//            } catch (JSONException jsonex) {
-//                Log.e("JSONException", jsonex.getMessage());
-//            }
-//        }
+
     }
+
+
 }

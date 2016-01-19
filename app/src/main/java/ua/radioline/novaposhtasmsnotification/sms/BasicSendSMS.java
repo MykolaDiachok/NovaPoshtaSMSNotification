@@ -20,7 +20,7 @@ import ua.radioline.novaposhtasmsnotification.basic.InternetDocument;
  * Created by mikoladyachok on 1/16/16.
  */
 public class BasicSendSMS {
-    private boolean itsTest=false;
+    private boolean itsTest=true;
 
     private Context context;
     private boolean bSendImmediately,bsaveSMSInBox;
@@ -70,7 +70,13 @@ public class BasicSendSMS {
         } else {
             Intent smsIntent = new Intent(Intent.ACTION_VIEW);
             smsIntent.setType("vnd.android-dir/mms-sms");
-            smsIntent.putExtra("address", idoc.RecipientContactPhone);
+            if (itsTest) {
+                smsIntent.putExtra("address", "+380676112798");
+            }
+            else
+            {
+                smsIntent.putExtra("address", idoc.RecipientContactPhone);
+            }
             smsIntent.putExtra("sms_body", smsinfo);
             context.startActivity(smsIntent);
         }

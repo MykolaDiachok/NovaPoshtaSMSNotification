@@ -3,13 +3,17 @@ package ua.radioline.novaposhtasmsnotification.fragment;
 
 import android.app.Fragment;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.Toast;
 
+
+import com.crashlytics.android.Crashlytics;
 
 import ua.radioline.novaposhtasmsnotification.R;
 import ua.radioline.novaposhtasmsnotification.basic.BaseValues;
@@ -40,6 +44,8 @@ public class ToolsFragment extends Fragment {
         cbSendImmediately = (CheckBox) rootView.findViewById(R.id.cbSendImmediately);
         cbSaveSMS = (CheckBox) rootView.findViewById(R.id.cbSaveSMS);
 
+
+
         Boolean keySendImmediately = Boolean.valueOf(BaseValues.GetValue("SendImmediately"));
         cbSendImmediately.setChecked(keySendImmediately);
         cbSaveSMS.setChecked(Boolean.valueOf(BaseValues.GetValue("saveSMSInBox")));
@@ -68,7 +74,9 @@ public class ToolsFragment extends Fragment {
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                    BaseValues.SetValue("KeyAPI", etKeyAPI.getText().toString());
+                    String keyValue = etKeyAPI.getText().toString();
+                    BaseValues.SetValue("KeyAPI", keyValue);
+                    Crashlytics.setString("keyValue", keyValue);
                     BaseValues.SetValue("Template",etTamplate.getText().toString());
                     BaseValues.SetValue("SendImmediately",String.valueOf(cbSendImmediately.isChecked()));
                     BaseValues.SetValue("saveSMSInBox",String.valueOf(cbSaveSMS.isChecked()));

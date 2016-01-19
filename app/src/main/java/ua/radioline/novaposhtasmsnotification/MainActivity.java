@@ -2,6 +2,7 @@ package ua.radioline.novaposhtasmsnotification;
 
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -17,34 +18,50 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
 import com.parse.ParseAnalytics;
 
-import java.text.SimpleDateFormat;
+
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 
 import ua.radioline.novaposhtasmsnotification.basic.BaseValues;
 import ua.radioline.novaposhtasmsnotification.basic.InternetDocument;
 import ua.radioline.novaposhtasmsnotification.fragment.GalleryFragment;
-import ua.radioline.novaposhtasmsnotification.fragment.MainFragment;
 import ua.radioline.novaposhtasmsnotification.fragment.SendFragment;
 import ua.radioline.novaposhtasmsnotification.fragment.ShareFragment;
 import ua.radioline.novaposhtasmsnotification.fragment.ToolsFragment;
-import ua.radioline.novaposhtasmsnotification.idoc.InternetDocumentAsyncTask;
-import ua.radioline.novaposhtasmsnotification.idoc.InternetDocumentOnTaskCompleted;
 import ua.radioline.novaposhtasmsnotification.sms.BasicSendSMS;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener,InternetDocumentOnTaskCompleted {
+        implements NavigationView.OnNavigationItemSelectedListener {
 
     public static Context contextOfApplication;
+
     public static Context getContextOfApplication() {
         return contextOfApplication;
     }
-    private Fragment cur_fragment = new GalleryFragment();
+
+    //    private Fragment cur_fragment = new GalleryFragment();
+    enum MyFragment {
+        tools,
+        gallery,
+        share,
+        sent
+    }
+
+    private MyFragment myFragment;
     private String keyValue;
+    private ProgressDialog mProgressDialog;
+
+
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putSerializable("currentFragment", myFragment);
+        super.onSaveInstanceState(outState);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,24 +75,6 @@ public class MainActivity extends AppCompatActivity
         setSupportActionBar(toolbar);
 
 
-
-
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                //      .setAction("Action", null).show();
-
-                SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
-                String currentDate = sdf.format(new Date());
-                new InternetDocumentAsyncTask(MainActivity.this,MainActivity.this).execute(currentDate);
-//                SmsManager smsManager = SmsManager.getDefault();
-//                smsManager.sendTextMessage("+380676112798", null, "sms message", null, null);
-            }
-        });
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -84,15 +83,33 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-
-
-
-        keyValue = BaseValues.GetValue("KeyAPI");
-        if (keyValue.isEmpty())
-            cur_fragment = new ToolsFragment();
-
         FragmentManager fm = getFragmentManager();
-        fm.beginTransaction().replace(R.id.content_frame, cur_fragment).commit();
+
+        if ((savedInstanceState != null) && savedInstanceState.getSerializable("currentFragment") != null) {
+            myFragment = (MyFragment) savedInstanceState.getSerializable("currentFragment");
+            if (myFragment==MyFragment.gallery){
+                fm.beginTransaction().replace(R.id.content_frame, new GalleryFragment()).commit();
+            }
+            else if (myFragment==MyFragment.tools){
+                fm.beginTransaction().replace(R.id.content_frame, new ToolsFragment()).commit();
+            }
+            else if (myFragment==MyFragment.share)
+                fm.beginTransaction().replace(R.id.content_frame, new ShareFragment()).commit();
+            else if (myFragment==MyFragment.sent)
+                fm.beginTransaction().replace(R.id.content_frame, new SendFragment()).commit();
+
+        } else {
+
+            keyValue = BaseValues.GetValue("KeyAPI");
+            if (keyValue.isEmpty()) {
+                myFragment = MyFragment.tools;
+                fm.beginTransaction().replace(R.id.content_frame, new ToolsFragment()).commit();
+            } else {
+                Crashlytics.setString("keyValue",keyValue);
+                myFragment = MyFragment.gallery;
+                fm.beginTransaction().replace(R.id.content_frame, new GalleryFragment()).commit();
+            }
+        }
 
     }
 
@@ -134,32 +151,41 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
         FragmentManager fm = getFragmentManager();
-        if (id == R.id.nav_gallery) {
-            cur_fragment = new GalleryFragment();
+        Fragment cur_fragment = new GalleryFragment();
 
-        } else if (id == R.id.nav_manage) {
+        myFragment = MyFragment.gallery;
+
+        if (id == R.id.nav_manage) {
             cur_fragment = new ToolsFragment();
+            myFragment = MyFragment.tools;
+
 
         } else if (id == R.id.nav_share) {
             cur_fragment = new ShareFragment();
+            myFragment = MyFragment.share;
 
         } else if (id == R.id.nav_send) {
             cur_fragment = new SendFragment();
+            myFragment = MyFragment.sent;
         }
-        fm.beginTransaction().replace(R.id.content_frame,cur_fragment).commit();
+        fm.beginTransaction().replace(R.id.content_frame, cur_fragment).commit();
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
 
-    @Override
-    public void onTaskCompleted(ArrayList<InternetDocument> internetDocuments) {
-        BasicSendSMS basicSend = new BasicSendSMS(MainActivity.this);
-        for (InternetDocument idoc:internetDocuments
-             ) {
-            if (!idoc.SendSMS){
-                basicSend.SendSMS(idoc);
-            }
-        }
-    }
+
+
+
+//    public void onTaskCompleted(ArrayList<InternetDocument> internetDocuments) {
+//        BasicSendSMS basicSend = new BasicSendSMS(MainActivity.this);
+//        for (InternetDocument idoc : internetDocuments
+//                ) {
+//            if (!idoc.SendSMS) {
+//                basicSend.SendSMS(idoc);
+//            }
+//        }
+//        if ((mProgressDialog!=null)&&(mProgressDialog.isShowing()))
+//            mProgressDialog.dismiss();
+//    }
 }

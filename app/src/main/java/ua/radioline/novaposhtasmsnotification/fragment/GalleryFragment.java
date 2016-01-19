@@ -2,12 +2,14 @@ package ua.radioline.novaposhtasmsnotification.fragment;
 
 import android.app.AlertDialog;
 import android.app.Fragment;
+import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 
+import android.support.design.widget.FloatingActionButton;
 import android.telephony.SmsManager;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,15 +36,15 @@ import ua.radioline.novaposhtasmsnotification.basic.BaseValues;
 import ua.radioline.novaposhtasmsnotification.basic.EditTextDatePickerOnCompleted;
 import ua.radioline.novaposhtasmsnotification.idoc.InternetDocumentAdapter;
 import ua.radioline.novaposhtasmsnotification.idoc.InternetDocumentAsyncTask;
-import ua.radioline.novaposhtasmsnotification.idoc.InternetDocumentOnTaskCompleted;
 import ua.radioline.novaposhtasmsnotification.basic.EditTextDatePicker;
 import ua.radioline.novaposhtasmsnotification.basic.InternetDocument;
+import ua.radioline.novaposhtasmsnotification.idoc.InternetDocumentOnTaskListener;
 import ua.radioline.novaposhtasmsnotification.sms.BasicSendSMS;
 
 
-public class GalleryFragment extends Fragment implements InternetDocumentOnTaskCompleted, EditTextDatePickerOnCompleted {
+public class GalleryFragment extends Fragment implements InternetDocumentOnTaskListener, EditTextDatePickerOnCompleted {
 
-    private boolean itsTest=false;
+    private boolean itsTest = false;
 
     private EditText etDate = null;
     private ListView lvArrayEN = null;
@@ -50,18 +52,38 @@ public class GalleryFragment extends Fragment implements InternetDocumentOnTaskC
     private InternetDocumentAdapter adapter;
     private boolean bSendImmediately, bsaveSMSInBox;
     private InternetDocument internetDocument;
-
-    public GalleryFragment() {
-        // Required empty public constructor
-    }
+    private ProgressDialog mProgressDialog;
+    private EditTextDatePicker datepicker;
+    private FloatingActionButton fabRefresh, fab;
 
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putString("etDate", etDate.getText().toString());
+        super.onSaveInstanceState(outState);
+    }
+
+    public GalleryFragment() {
+        super();
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        if (savedInstanceState != null) {
+            String tempDate = savedInstanceState.getString("etDate");
+            etDate.setText(tempDate);
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
+        }
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, final ViewGroup container,
                              Bundle savedInstanceState) {
 
 
         View rootView = inflater.inflate(R.layout.fragment_gallery, container, false);
+
 
         bSendImmediately = Boolean.valueOf(BaseValues.GetValue("SendImmediately"));
         bsaveSMSInBox = Boolean.valueOf(BaseValues.GetValue("saveSMSInBox"));
@@ -101,55 +123,55 @@ public class GalleryFragment extends Fragment implements InternetDocumentOnTaskC
             }
         });
 
-        EditTextDatePicker datepicker = new EditTextDatePicker(container.getContext(), etDate, tDate, this);
-        datepicker.setCurrentDate();
+
+        if ((savedInstanceState != null) && savedInstanceState.getString("etDate") != null) {
+
+            String tempDate = savedInstanceState.getString("etDate");
+            etDate.setText(tempDate);
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
+
+            try {
+                tDate = dateFormat.parse(tempDate);
+                datepicker = new EditTextDatePicker(container.getContext(), etDate, tDate, this);
+                datepicker.setDate(tDate);
+
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        } else {
+            datepicker = new EditTextDatePicker(container.getContext(), etDate, tDate, this);
+            datepicker.setCurrentDate();
+        }
+
+
+        fabRefresh = (FloatingActionButton) rootView.findViewById(R.id.fabRefresh);
+        fabRefresh.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String date = etDate.getText().toString();
+                new InternetDocumentAsyncTask(getActivity(), GalleryFragment.this).execute(date);
+            }
+        });
+
+        fab = (FloatingActionButton) rootView.findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+
+                SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
+                String currentDate = sdf.format(new Date());
+                new InternetDocumentAsyncTask(getActivity(), GalleryFragment.this).execute(currentDate, "true");
+
+            }
+        });
+
+
         return rootView;
     }
 
 
-    private void SendSMS(InternetDocument idoc)
-    {
-//        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-//        String sdate = idoc.EstimatedDeliveryDate.substring(0, 10);
-//        try {
-//            Date date = format.parse(idoc.EstimatedDeliveryDate);
-//            format = new SimpleDateFormat("dd.MM.yyyy");
-//            sdate = format.format(date);
-//        } catch (ParseException e) {
-//            e.printStackTrace();
-//        }
-//        String smsinfo = "RL otpravleno Nova Poshta " + idoc.IntDocNumber + " mest " + idoc.SeatsAmount + " data " + sdate;
-//
-//        if (bSendImmediately) {
-//            SmsManager smsManager = SmsManager.getDefault();
-//            if (itsTest) {
-//                smsManager.sendTextMessage("+380676112798", null, smsinfo, null, null);
-//            }
-//            else
-//            {
-//                smsManager.sendTextMessage(idoc.RecipientContactPhone, null, smsinfo, null, null);
-//            }
-//            if (bsaveSMSInBox) {
-//                ContentValues values = new ContentValues();
-//                values.put("address", idoc.RecipientContactPhone);//sender name
-//                values.put("body", smsinfo);
-//                MainActivity.contextOfApplication.getContentResolver().insert(Uri.parse("content://sms/sent"), values);
-//            }
-//
-//
-//        } else {
-//            Intent smsIntent = new Intent(Intent.ACTION_VIEW);
-//            smsIntent.setType("vnd.android-dir/mms-sms");
-//            smsIntent.putExtra("address", idoc.RecipientContactPhone);
-//            smsIntent.putExtra("sms_body", smsinfo);
-//            startActivity(smsIntent);
-//        }
-//
-//
-//        idoc.SendSMS = true;
-//        DBHelper dbHelper = new DBHelper();
-//        dbHelper.insert(idoc.IntDocNumber, idoc.RecipientContactPhone, idoc.IntDocNumber, "SMS info", true);
-//        Toast.makeText(getActivity(), idoc.RecipientContactPhone, Toast.LENGTH_LONG).show();
+    private void SendSMS(InternetDocument idoc) {
         BasicSendSMS basicSendSMS = new BasicSendSMS(MainActivity.contextOfApplication);
         basicSendSMS.SendSMS(idoc);
         adapter.notifyDataSetChanged();
@@ -157,11 +179,51 @@ public class GalleryFragment extends Fragment implements InternetDocumentOnTaskC
 
 
     @Override
-    public void onTaskCompleted(ArrayList<InternetDocument> internetDocuments) {
+    public void onTaskStarted() {
 
-        adapter = new InternetDocumentAdapter(getActivity(), internetDocuments);
-        lvArrayEN.setAdapter(adapter);
+
+        mProgressDialog = new ProgressDialog(getActivity());
+
+        mProgressDialog.setMessage("Waiting...");
+        mProgressDialog.setIndeterminate(false);
+        mProgressDialog.setCancelable(false);
+
+
+        mProgressDialog.show();
     }
+
+    private void dismissProgressDialog() {
+        if ((mProgressDialog != null) && (mProgressDialog.isShowing()))
+            mProgressDialog.dismiss();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        dismissProgressDialog();
+    }
+
+    @Override
+    public void onTaskCompleted(ArrayList<InternetDocument> internetDocuments, boolean forSent) {
+        if (!forSent) {
+            adapter = new InternetDocumentAdapter(getActivity(), internetDocuments);
+            lvArrayEN.setAdapter(adapter);
+        } else if (forSent) {
+            BasicSendSMS basicSend = new BasicSendSMS(getActivity());
+            for (InternetDocument idoc : internetDocuments
+                    ) {
+                if (!idoc.SendSMS) {
+                    basicSend.SendSMS(idoc);
+                }
+            }
+            adapter = new InternetDocumentAdapter(getActivity(), internetDocuments);
+            lvArrayEN.setAdapter(adapter);
+        }
+
+
+    dismissProgressDialog();
+
+}
 
     @Override
     public void OnCompleted(String date) {
